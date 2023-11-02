@@ -1,4 +1,4 @@
-import { Tradr } from '@tradrapi/trading-sdk';
+import { Tradr } from 'npm:@tradrapi/trading-sdk';
 
 /** Development key */
 const API_KEY = 'bHxKy1w3B+kvbbN4KymBp9ZE6X4z8hFP3LwNVUI9tpM=';
