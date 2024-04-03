@@ -1,6 +1,6 @@
 // retrieve trading account information
 
-import { Tradr, Config } from "@tradrapi/trading-sdk";
+import { Tradr, Config } from "npm:@tradrapi/trading-sdk";
 
 const apiKey = prompt("Enter your API key:");
 
