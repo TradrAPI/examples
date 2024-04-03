@@ -13,7 +13,8 @@ const sdkConfig: Config = {
 const tradrApi = Tradr.make(sdkConfig);
 
 // the id of the account to retrieve
-const accountId = 0;
+// ⬇️⬇️⬇️ replace with your account id ⬇️⬇️⬇️
+const ACCOUNT_ID = 0;
 
 // retrieve the account
-tradrApi.accounts.get(accountId).then((data) => console.log(data));
+tradrApi.accounts.get(ACCOUNT_ID).then((data) => console.log(data));

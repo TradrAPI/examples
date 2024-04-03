@@ -18,6 +18,7 @@ const filters: ListAccountDto = {
   sortBy: "createdAt",
   // number of accounts to retrieve per request
   limit: 10,
+  // ℹ️ ⬇ ️apply more filters, press ctrl+space to see all available filters
 };
 
 // retrieve the accounts
