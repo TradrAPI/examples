@@ -1,0 +1,18 @@
+{
+  "private": "false",
+  "license": "MIT",
+  "dependencies": {
+    "@tradrapi/trading-sdk": "latest"
+  },
+  "devDependencies": {
+    "husky": ">=6",
+    "lint-staged": ">=10",
+    "prettier": "^3.2.5"
+  },
+  "lint-staged": {
+    "*.{js,css,md}": "prettier --write"
+  },
+  "scripts": {
+    "prepare": "husky install"
+  }
+}

@@ -1,5 +1,4 @@
 .idea
 .prettierrc
 node_modules
-package.json
 package-lock.json

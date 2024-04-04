@@ -12,27 +12,33 @@ const LEVERAGE = 100; // The leverage to use for the account
 const MIN_REGRESSION_VARIANCE = 0.01; // Do not predict if the variance is too low
 const MIN_PREDICTED_PROFIT_PERCENTAGE = 1; // Do not predict if the profit potential is too low
 
-const SYMBOLS = ['BTCUSD', 'ETHUSD'];
+const SYMBOLS = ["BTCUSD", "ETHUSD"];
 const DISPLAY_OUTCOMES = 10;
 ////////////////////////////////////////////////////////////////////////////////
 
 import {
   Tradr,
-  ServerType,
   AccountType,
   AccountResult,
   BalanceOperation,
   DecoratedTickItem,
   SupportedCurrency,
-} from '@tradrapi/trading-sdk';
-import { randomUUID } from 'crypto';
-import regression, { DataPoint } from 'regression';
+  Config,
+  AccountServerType,
+} from "npm:@tradrapi/trading-sdk";
+import { randomUUID } from "node:crypto";
+import regression, { DataPoint } from "npm:regression";
+
+const apiKey = prompt("Enter your API key:");
+
+// configure the SDK
+const sdkConfig: Config = {
+  auth: { apiKey },
+  debug: true,
+};
 
 // Create a new instance of the SDK
-const tradrApi = Tradr.make({
-  exchange: { serviceUrl: 'https://dev.tradrapi.com', socketUrl: 'wss://dev-wss.tradrapi.com' },
-  auth: { apiKey: '<API-KEY>' },
-});
+const tradrApi = Tradr.make(sdkConfig);
 
 interface Prediction {
   id: string;
@@ -78,24 +84,24 @@ async function main() {
 
   try {
     // Create a new demo account
-    console.info('ℹ️ Opening a demo trading account');
+    console.info("ℹ️ Opening a demo trading account");
     account = await tradrApi.accounts.open(
       {
         type: AccountType.Full,
-        server: ServerType.Demo,
-        firstName: 'TradrAPI',
-        lastName: 'Bot',
+        server: AccountServerType.Demo,
+        firstName: "TradrAPI",
+        lastName: "Bot",
         email: `simple-bot-${new Date().getTime()}@tradrapi.com`,
         currency: SupportedCurrency.USD,
         leverage: LEVERAGE,
       },
-      randomUUID(),
+      randomUUID()
     );
 
     console.info(`✅ Demo trading account opened - ${account.id}`);
 
     // Fund the account with some demo money
-    console.info('ℹ️ Funding the demo trading account');
+    console.info("ℹ️ Funding the demo trading account");
     await tradrApi.admin.balance.update({
       accountId: account.id,
       amount: 10_000,
@@ -104,15 +110,21 @@ async function main() {
 
     // Confirming the account balance
     const balance = await tradrApi.balances.get(account.id);
-    console.info(`✅ Trading account ${account.id} has a balance of ${balance.balance}`);
+    console.info(
+      `✅ Trading account ${account.id} has a balance of ${balance.balance}`
+    );
   } catch (e) {
-    console.error('❌ Something went wrong', e);
+    console.error("❌ Something went wrong", e);
     return;
   }
 
   // Listen for market prices
-  console.info('ℹ️ Listening to live prices');
-  tradrApi.socket.subscribeTicks(SYMBOLS, account?.spreadGroup?.name || '', onTick);
+  console.info("ℹ️ Listening to live prices");
+  tradrApi.socket.subscribeTicks(
+    SYMBOLS,
+    account?.spreadGroup?.name || "",
+    onTick
+  );
 
   // Increment counter
   setInterval(() => mainCounter++, 100);
@@ -232,7 +244,8 @@ function evaluatePredictions() {
       const correctness = (Math.abs(actualMovement) / Math.abs(movement)) * 100;
 
       // Check if the prediction direction was correct
-      const isDirectionCorrect = (direction > 0 && ask >= price) || (direction < 0 && ask <= price);
+      const isDirectionCorrect =
+        (direction > 0 && ask >= price) || (direction < 0 && ask <= price);
 
       // If the prediction was correct and
       // the movement was within the threshold
@@ -262,33 +275,37 @@ function printCli() {
   marketStatuses.forEach((m: MarketStatus, s: string) => {
     const { price, gradient, movement } = m;
 
-    let icon = '⚪';
-    if (gradient > MIN_REGRESSION_VARIANCE) icon = '🟢';
-    if (gradient < -MIN_REGRESSION_VARIANCE) icon = '🔴';
+    let icon = "⚪";
+    if (gradient > MIN_REGRESSION_VARIANCE) icon = "🟢";
+    if (gradient < -MIN_REGRESSION_VARIANCE) icon = "🔴";
 
     const rate = tickRates.get(s) || [0, 0];
 
     console.log(
-      `${icon}  ${s}@${price} ${movement.toFixed(2)}% (var ${gradient}) ${rate[0].toFixed(1)}t/s`,
+      `${icon}  ${s}@${price} ${movement.toFixed(
+        2
+      )}% (var ${gradient}) ${rate[0].toFixed(1)}t/s`
     );
   });
 
-  console.log('\n-------------------------------------------------');
+  console.log("\n-------------------------------------------------");
   console.log(`| Predictions`);
-  console.log('-------------------------------------------------\n');
+  console.log("-------------------------------------------------\n");
 
   // Draw the predictions
   predictions.forEach((data: Prediction[], s: string) => {
     data.forEach((p: Prediction) => {
       const { price, prediction, movement, at } = p;
 
-      const info = p.direction > 0 ? ['📈', 'up'] : ['📉', 'down'];
+      const info = p.direction > 0 ? ["📈", "up"] : ["📉", "down"];
       const time = (at + PREDICTION_LIFETIME_SEC * 10 - mainCounter) / 10;
 
       console.log(
-        `${info[0]}  ${s} will go ${info[1]} from ${price} to ${prediction} by ${movement.toFixed(
-          2,
-        )}% in ${Math.max(0, time).toFixed(0)} seconds`,
+        `${info[0]}  ${s} will go ${
+          info[1]
+        } from ${price} to ${prediction} by ${movement.toFixed(
+          2
+        )}% in ${Math.max(0, time).toFixed(0)} seconds`
       );
     });
   });
@@ -298,34 +315,39 @@ function printCli() {
     .reduce(
       (acc: number, o: Outcome) =>
         acc + (o.wasCorrect ? Math.abs(o.movement) : -Math.abs(o.movement)),
-      0,
+      0
     )
     .toFixed(2);
 
   // Calculate the total correct predictions
   const totalCorrect =
-    Array.from(outcomes.values()).filter((o: Outcome) => o.wasCorrect).length || 0;
+    Array.from(outcomes.values()).filter((o: Outcome) => o.wasCorrect).length ||
+    0;
 
   // Calculate the accuracy
   const accuracy = ((totalCorrect / outcomes.size) * 100 || 0).toFixed(0);
 
-  console.log('\n-------------------------------------------------');
-  console.log(`| Profit ${totalProfitPercent}% | Accuracy ${accuracy}% of #${outcomes.size}`);
-  console.log('-------------------------------------------------\n');
+  console.log("\n-------------------------------------------------");
+  console.log(
+    `| Profit ${totalProfitPercent}% | Accuracy ${accuracy}% of #${outcomes.size}`
+  );
+  console.log("-------------------------------------------------\n");
 
   // Draw the latest results
   Array.from(outcomes.values())
     .slice(Math.max(outcomes.size - DISPLAY_OUTCOMES, 0))
     .forEach((o: Outcome) => {
       const { prediction, price, movement, wasCorrect } = o;
-      const info = prediction.direction > 0 ? ['📈', 'up'] : ['📉', 'down'];
+      const info = prediction.direction > 0 ? ["📈", "up"] : ["📉", "down"];
 
       console.log(
-        `${wasCorrect ? '✅' : '❌'} ${info[0]} ${prediction.symbol} ${
+        `${wasCorrect ? "✅" : "❌"} ${info[0]} ${prediction.symbol} ${
           info[1]
         } ${prediction.movement.toFixed(3)}% [${prediction.price} -> ${
           prediction.prediction
-        }] - Outcome ${movement.toFixed(3)}% [${price}] (var ${prediction.variance})`,
+        }] - Outcome ${movement.toFixed(3)}% [${price}] (var ${
+          prediction.variance
+        })`
       );
     });
 }
