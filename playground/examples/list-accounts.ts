@@ -1,25 +1,23 @@
-// retrieve list of trading accounts for specified API key
+// Retrieve list of trading accounts for specified API key
 
 import { Tradr, Config, ListAccountDto } from "@tradrapi/trading-sdk";
 
-// configure the SDK
+// Configure the SDK
 const sdkConfig: Config = {
   // <EXCHANGE-CONFIG>
   auth: { apiKey: "<API-KEY>" },
   debug: true,
 };
 
-// create an instance of the SDK
+// Create an instance of the SDK
 const tradrApi = Tradr.make(sdkConfig);
 
-// filter and sort the accounts based on your needs
+// Filter and sort the accounts based on your needs
 const filters: ListAccountDto = {
-  // sort the accounts by creation date
-  sortBy: "createdAt",
-  // number of accounts to retrieve per request
-  limit: 10,
-  // ℹ️ ⬇ ️apply more filters, press ctrl+space to see all available filters
+  sortBy: "createdAt",  // Sort the accounts by creation date
+  limit: 10, // Number of accounts to retrieve per request
+  // ℹ️ ⬇ ️Apply more filters, press ctrl+space to see all available filters
 };
 
-// retrieve the accounts
+// Retrieve the accounts
 tradrApi.accounts.list(filters).then((data) => console.log(data));
